@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>东北师范大学抢课系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 350px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .notifications {
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification-item.success {
+            border-left-color: #27ae60;
+            background: #2ecc71;
+        }
+        
+        .notification-item.error {
+            border-left-color: #e74c3c;
+            background: #e74c3c;
+        }
+        
+        .notification-item.warning {
+            border-left-color: #f39c12;
+            background: #f39c12;
+        }
+        
+        .notification-time {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .notification-message {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .clear-notifications {
+            width: 100%;
+            padding: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            margin-left: 350px;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d35400;
+            transform: translateY(-2px);
+        }
+        
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .login-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .login-tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .login-content {
+            display: none;
+        }
+        
+        .login-content.active {
+            display: block;
+        }
+        
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .course-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background: white;
+            transition: all 0.3s;
+        }
+        
+        .course-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .course-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .course-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .monitoring-list {
+            margin-top: 20px;
+        }
+        
+        .monitoring-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-running {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .status-success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .pagination button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏通知系统 -->
+    <div class="sidebar">
+        <h2>📢 系统通知</h2>
+        <div id="notifications-list" class="notifications">
+            <div class="notification-item">
+                <div class="notification-time">欢迎使用抢课系统</div>
+                <div class="notification-message">请先登录系统开始使用</div>
+            </div>
+        </div>
+        <button class="clear-notifications" onclick="clearNotifications()">清空通知</button>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>东北师范大学抢课系统</h1>
+                <p>智能监控、自动抢课、多线程支持</p>
+            </div>
+            
+            <div class="content">
+                <!-- 登录区域 -->
+                <div class="section">
+                    <h2>登录系统</h2>
+                    <div class="login-tabs">
+                        <div class="login-tab active" onclick="switchLoginTab('cookie')">Cookie设置</div>
+                        <div class="login-tab" onclick="switchLoginTab('password')">账号密码登录</div>
+                    </div>
+                    
+                    <div id="cookie-login" class="login-content active">
+                        <div class="form-group">
+                            <label for="cookies">Cookie内容：</label>
+                            <textarea id="cookies" placeholder="请输入JSESSIONID值，格式：JSESSIONID=xxx">JSESSIONID=</textarea>
+                        </div>
+                    </div>
+                    
+                    <div id="password-login" class="login-content">
+                        <div class="form-group">
+                            <label for="username">学号：</label>
+                            <input type="text" id="username" placeholder="请输入学号">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">密码：</label>
+                            <input type="password" id="password" placeholder="请输入密码">
+                        </div>
+                        <button class="btn btn-primary" onclick="login()">登录</button>
+                    </div>
+                </div>
+                
+                <!-- 课程查询区域 -->
+                <div class="section">
+                    <h2>课程查询</h2>
+                    <div class="form-group">
+                        <label for="course-type">课程类型：</label>
+                        <select id="course-type">
+                            <option value="public_jingyue">公共课程（净月）</option>
+                            <option value="major_jingyue">专业课程（净月）</option>
+                            <option value="public_benbu">公共课程（本部）</option>
+                            <option value="major_benbu">专业课程（本部）</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="search-keyword">课程关键词：</label>
+                        <input type="text" id="search-keyword" placeholder="输入课程名称或代码进行搜索">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="searchCourses()">查询课程</button>
+                    <button class="btn btn-warning" onclick="clearSearch()">清空条件</button>
+                    
+                    <div id="search-results" class="course-grid"></div>
+                    <div id="pagination" class="pagination"></div>
+                    
+                    <!-- 第二层查询结果区域 -->
+                    <div id="section-results" class="section-results" style="display: none; margin-top: 30px;">
+                        <h3>📚 课程班次查询结果</h3>
+                        <div id="section-results-content" class="course-grid"></div>
+                        <div id="section-pagination" class="pagination"></div>
+                    </div>
+                </div>
+                
+                <!-- 监控管理区域 -->
+                <div class="section">
+                    <h2>监控管理</h2>
+                    <div id="monitoring-list" class="monitoring-list"></div>
+                    <button class="btn btn-primary" onclick="refreshMonitoring()">刷新状态</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        // 第二层查询分页变量
+        let currentSectionPage = 1;
+        let totalSectionPages = 1;
+        let currentSectionData = null;
+        let currentCourseInfo = null;
+        
+        // 通知系统
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notifications-list');
+            container.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="notification-item"><div class="notification-message">暂无通知</div></div>';
+                return;
+            }
+            
+            // 按时间倒序显示
+            notifications.reverse().forEach(notification => {
+                const item = document.createElement('div');
+                item.className = `notification-item ${notification.level}`;
+                item.innerHTML = `
+                    <div class="notification-time">${notification.time_str}</div>
+                    <div class="notification-message">${notification.message}</div>
+                `;
+                container.appendChild(item);
+            });
+            
+            // 自动滚动到底部
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/notifications');
+                const notifications = await response.json();
+                displayNotifications(notifications);
+            } catch (error) {
+                console.error('加载通知失败:', error);
+            }
+        }
+        
+        async function clearNotifications() {
+            try {
+                const response = await fetch('/notifications/clear', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('清空通知失败:', error);
+            }
+        }
+        
+        function switchLoginTab(tab) {
+            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.login-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchLoginTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}-login`).classList.add('active');
+        }
+        
+        function getCurrentCookies() {
+            return document.getElementById('cookies').value.trim();
+        }
+        
+        function validateCookies() {
+            const cookies = getCurrentCookies();
+            if (!cookies) {
+                alert('请输入Cookie内容');
+                return false;
+            }
+            return true;
+        }
+        
+        async function searchCourses(page = 1) {
+            if (!validateCookies()) return;
+            
+            currentPage = page;
+            const courseType = document.getElementById('course-type').value;
+            const keyword = document.getElementById('search-keyword').value;
+            
+            const data = {
+                course_type: courseType,
+                page: page,
+                rows: 10,
+                cookies: getCurrentCookies()
+            };
+            
+            if (keyword) {
+                data.kcxx = keyword;
+            }
+            
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    console.error('查询失败:', result.error);
+                    alert('查询失败: ' + result.error);
+                    return;
+                }
+                
+                displayCourses(result);
+                updatePagination(result);
+            } catch (error) {
+                console.error('查询失败:', error);
+                alert('查询失败，请检查网络连接');
+            }
+        }
+        
+        function displayCourses(data) {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            
+            if (!data.rows || data.rows.length === 0) {
+                resultsDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">未找到相关课程</div>';
+                return;
+            }
+            
+            data.rows.forEach(course => {
+                const courseCard = document.createElement('div');
+                courseCard.className = 'course-card';
+                courseCard.innerHTML = `
+                    <h3>${course.kcmc || '未知课程'}</h3>
+                    <div class="course-info">
+                        <div><strong>课程代码:</strong> ${course.kcdm || '未知'}</div>
+                        <div><strong>教师:</strong> ${course.teaxm || '未知'}</div>
+                        <div><strong>时间:</strong> ${course.zcxqjc || '未知'}</div>
+                        <div><strong>地点:</strong> ${course.jxcdmc || '未知'}</div>
+                        <div><strong>学分:</strong> ${course.xf || '未知'}</div>
+                        <div><strong>容量:</strong> ${course.jxbrs || '0'}/${course.pkrs || '0'}</div>
+                        <div><strong>课程平台代码:</strong> ${course.kcptdm || '未知'}</div>
+                    </div>
+                    <button class="btn btn-success" onclick="selectCourse('${course.kcrwdm}', '${course.kcmc?.replace(/'/g, "\\'") || '未知课程'}')">立即选课</button>
+                    <button class="btn btn-warning" onclick="startMonitoring('${course.kcrwdm}', '${course.kcmc?.replace(/'/g, "\\'") || '未知课程'}')">监控抢课</button>
+                    <button class="btn btn-primary" onclick="queryCourseSections('${course.kcptdm || ''}', '${course.kcmc?.replace(/'/g, "\\'") || '未知课程'}')">查询班次</button>
+                `;
+                resultsDiv.appendChild(courseCard);
+            });
+        }
+        
+        function updatePagination(data) {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+            
+            if (!data.total || data.total <= 10) return;
+            
+            totalPages = Math.ceil(data.total / 10);
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => searchCourses(i);
+                if (i === currentPage) {
+                    pageBtn.classList.add('active');
+                }
+                paginationDiv.appendChild(pageBtn);
+            }
+        }
+        
+        function clearSearch() {
+            document.getElementById('search-keyword').value = '';
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('pagination').innerHTML = '';
+            hideSectionResults();
+        }
+        
+        function hideSectionResults() {
+            document.getElementById('section-results').style.display = 'none';
+            document.getElementById('section-results-content').innerHTML = '';
+            document.getElementById('section-pagination').innerHTML = '';
+            currentSectionData = null;
+            currentCourseInfo = null;
+            currentSectionPage = 1;
+            totalSectionPages = 1;
+        }
+        
+        async function queryCourseSections(kcptdm, kcmc, page = 1) {
+            if (!validateCookies()) return;
+            
+            if (!kcptdm) {
+                alert('该课程缺少课程平台代码，无法查询班次');
+                return;
+            }
+            
+            const courseType = document.getElementById('course-type').value;
+            
+            try {
+                const response = await fetch('/sections', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        course_type: courseType,
+                        kcptdm: kcptdm,
+                        page: page,
+                        rows: 12,  // 每页最多12个课程
+                        cookies: getCurrentCookies()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    console.error('查询班次失败:', result.error);
+                    alert('查询班次失败: ' + result.error);
+                    return;
+                }
+                
+                // 保存当前查询的数据和课程信息
+                currentSectionData = result;
+                currentCourseInfo = { kcptdm: kcptdm, kcmc: kcmc };
+                currentSectionPage = page;
+                
+                displaySectionResults(result, kcmc, page);
+            } catch (error) {
+                console.error('查询班次失败:', error);
+                alert('查询班次失败，请检查网络连接');
+            }
+        }
+        
+        function displaySectionResults(data, courseName, page = 1) {
+            const sectionResultsDiv = document.getElementById('section-results-content');
+            const sectionContainer = document.getElementById('section-results');
+            
+            sectionResultsDiv.innerHTML = '';
+            sectionContainer.style.display = 'block';
+            
+            // 更新标题显示具体课程名称和分页信息
+            const total = data.total || 0;
+            const startIndex = (page - 1) * 12 + 1;
+            const endIndex = Math.min(page * 12, total);
+            document.querySelector('#section-results h3').textContent = `📚 ${courseName} - 课程班次查询结果 (${startIndex}-${endIndex}/${total})`;
+            
+            if (!data.rows || data.rows.length === 0) {
+                sectionResultsDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">该课程暂无其他班次</div>';
+                document.getElementById('section-pagination').innerHTML = '';
+                return;
+            }
+            
+            data.rows.forEach(section => {
+                const sectionCard = document.createElement('div');
+                sectionCard.className = 'course-card';
+                sectionCard.innerHTML = `
+                    <h3>${section.kcmc || '未知课程'}</h3>
+                    <div class="course-info">
+                        <div><strong>教师:</strong> ${section.teaxm || '未知'}</div>
+                        <div><strong>时间:</strong> ${section.zcxqjc || '未知'}</div>
+                        <div><strong>地点:</strong> ${section.jxcdmc || '未知'}</div>
+                        <div><strong>学分:</strong> ${section.xf || '未知'}</div>
+                        <div><strong>容量:</strong> ${section.jxbrs || '0'}/${section.pkrs || '0'}</div>
+                        <div><strong>课程任务代码:</strong> ${section.kcrwdm || '未知'}</div>
+                    </div>
+                    <button class="btn btn-success" onclick="selectCourse('${section.kcrwdm}', '${section.kcmc?.replace(/'/g, "\\'") || '未知课程'}')">立即选课</button>
+                    <button class="btn btn-warning" onclick="startMonitoring('${section.kcrwdm}', '${section.kcmc?.replace(/'/g, "\\'") || '未知课程'}')">监控抢课</button>
+                `;
+                sectionResultsDiv.appendChild(sectionCard);
+            });
+            
+            // 更新分页
+            updateSectionPagination(data, page);
+            
+            // 滚动到结果区域
+            sectionContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function updateSectionPagination(data, currentPage) {
+            const paginationDiv = document.getElementById('section-pagination');
+            paginationDiv.innerHTML = '';
+            
+            if (!data.total || data.total <= 12) return;
+            
+            totalSectionPages = Math.ceil(data.total / 12);
+            
+            // 添加上一页按钮
+            if (currentPage > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '上一页';
+                prevBtn.onclick = () => querySectionPage(currentPage - 1);
+                paginationDiv.appendChild(prevBtn);
+            }
+            
+            // 添加页码按钮
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalSectionPages, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => querySectionPage(i);
+                if (i === currentPage) {
+                    pageBtn.classList.add('active');
+                }
+                paginationDiv.appendChild(pageBtn);
+            }
+            
+            // 添加下一页按钮
+            if (currentPage < totalSectionPages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '下一页';
+                nextBtn.onclick = () => querySectionPage(currentPage + 1);
+                paginationDiv.appendChild(nextBtn);
+            }
+        }
+        
+        function querySectionPage(page) {
+            if (currentCourseInfo && currentCourseInfo.kcptdm) {
+                queryCourseSections(currentCourseInfo.kcptdm, currentCourseInfo.kcmc, page);
+            }
+        }
+        
+        async function selectCourse(kcrwdm, kcmc) {
+            if (!validateCookies()) return;
+            
+            const courseType = document.getElementById('course-type').value;
+            
+            try {
+                const response = await fetch('/select', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        course_type: courseType,
+                        kcrwdm: kcrwdm,
+                        kcmc: kcmc,
+                        cookies: getCurrentCookies()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.code === 0) {
+                    loadNotifications(); // 刷新通知
+                } else {
+                    alert('选课失败: ' + (result.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('选课失败:', error);
+                alert('选课失败，请检查网络连接');
+            }
+        }
+        
+        async function startMonitoring(kcrwdm, kcmc) {
+            if (!validateCookies()) return;
+            
+            const courseType = document.getElementById('course-type').value;
+            
+            try {
+                const response = await fetch('/monitor/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        course_type: courseType,
+                        kcrwdm: kcrwdm,
+                        kcmc: kcmc,
+                        interval: 5,
+                        cookies: getCurrentCookies()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadNotifications(); // 刷新通知
+                    refreshMonitoring();
+                } else {
+                    alert('启动监控失败: ' + (result.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('启动监控失败:', error);
+                alert('启动监控失败，请检查网络连接');
+            }
+        }
+        
+        async function stopMonitoring(threadId) {
+            try {
+                const response = await fetch('/monitor/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ thread_id: threadId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadNotifications(); // 刷新通知
+                    refreshMonitoring();
+                }
+            } catch (error) {
+                console.error('停止监控失败:', error);
+            }
+        }
+        
+        async function refreshMonitoring() {
+            try {
+                const response = await fetch('/monitor/status');
+                const status = await response.json();
+                
+                const monitoringList = document.getElementById('monitoring-list');
+                monitoringList.innerHTML = '';
+                
+                if (Object.keys(status).length === 0) {
+                    monitoringList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暂无监控任务</div>';
+                    return;
+                }
+                
+                Object.entries(status).forEach(([threadId, task]) => {
+                    const item = document.createElement('div');
+                    item.className = 'monitoring-item';
+                    item.innerHTML = `
+                        <div>
+                            <strong>${task.kcmc}</strong><br>
+                            <span class="status-${task.status}">状态: ${task.status}</span>
+                        </div>
+                        <button class="btn btn-danger" onclick="stopMonitoring('${threadId}')">停止监控</button>
+                    `;
+                    monitoringList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('获取监控状态失败:', error);
+            }
+        }
+        
+        // 状态变化检测
+        let lastMonitoringStatus = {};
+        let lastNotificationCount = 0;
+        
+        // 自动刷新监控状态和通知（只在有变化时更新）
+        setInterval(() => {
+            // 检查监控状态是否有变化
+            fetch('/monitor/status')
+                .then(response => response.json())
+                .then(currentStatus => {
+                    if (JSON.stringify(currentStatus) !== JSON.stringify(lastMonitoringStatus)) {
+                        lastMonitoringStatus = currentStatus;
+                        refreshMonitoring();
+                    }
+                })
+                .catch(error => console.error('检查监控状态失败:', error));
+            
+            // 检查通知是否有变化
+            fetch('/notifications')
+                .then(response => response.json())
+                .then(notifications => {
+                    if (notifications.length !== lastNotificationCount) {
+                        lastNotificationCount = notifications.length;
+                        displayNotifications(notifications);
+                    }
+                })
+                .catch(error => console.error('检查通知失败:', error));
+        }, 3000);
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshMonitoring();
+            loadNotifications();
+        });
+    </script>
+</body>
+</html>
